@@ -1,0 +1,88 @@
+df = df.dropna(subset=['home_team', 'away_team', 'score','goal_diff'])
+q4 = df[['home_team', 'away_team', 'score', 'goal_diff']]
+
+# Create a pivot table using 'home_team' and 'away_team' as index and columns
+pivot_table = pd.pivot_table(q4, values='goal_diff', index='home_team', columns='away_team', fill_value=0, aggfunc = 'score' )
+
+# Create the heatmap
+
+plt.figure(figsize=(10, 10))
+plt.pcolor(pivot_table, cmap='coolwarm', edgecolors='k', linewidths=1)
+plt.xticks(range(len(pivot_table.columns)), pivot_table.columns, rotation=90)
+plt.yticks(range(len(pivot_table.index)), pivot_table.index)
+plt.colorbar(label='Score')
+plt.title('Team Scores Heatmap')
+plt.show()
+
+
+# Assuming you have a pivot table named pivot_table
+# This is just an example; replace it with your actual pivot table
+
+# Convert the pivot table to a crosstab
+crosstab_table = pd.crosstab(index='home_team', columns='away_team', values='score')
+
+#pivot_table = pd.pivot_table(q4, values='goal_diff', index='home_team', columns='away_team', fill_value=0)
+
+
+
+# Display the crosstab
+print(crosstab_table)
+
+
+
+
+q5
+
+
+q5=df
+filtered_df = q5[(q5['home_team'] == "Real Madrid") & (q5['away_team'] == "Barcelona") & ~q5['results'].isna()]
+
+# Display the filtered DataFrame
+#display(filtered_df)
+
+# Filter the DataFrame
+filtered_df = df[(df['home_team'] == "Real Madrid") & (df['away_team'] == "Barcelona") & ~df['results'].isna()]
+
+# Display the filtered DataFrame
+#display(filtered_df)
+
+result_counts_Madrid_home= filtered_df['results'].value_counts()
+count_of_1_Mh = result_counts_Madrid_home.get(1, 0)
+result_counts_Barcelona_away= filtered_df['results'].value_counts()
+count_of_2_Ba = result_counts_Barcelona_away.get(2, 0)
+result_counts_ties= filtered_df['results'].value_counts()
+count_of_TiesM= result_counts_ties.get("X", 0)
+
+
+
+filtered_df = df[(df['away_team'] == "Real Madrid") & (df['home_team'] == "Barcelona") & ~df['results'].isna()]
+result_counts_Barcelona_home= filtered_df['results'].value_counts()
+count_of_1_Bh = result_counts_Barcelona_home.get(1, 0)
+result_counts_Madrid_away= filtered_df['results'].value_counts()
+count_of_2_Ma = result_counts_Madrid_away.get(2, 0)
+result_counts_ties= filtered_df['results'].value_counts()
+count_of_TiesB= result_counts_ties.get("X", 0)
+
+BarcelonaWon=count_of_1_Bh+count_of_2_Ba
+TotalTies=count_of_TiesM+count_of_TiesB
+
+print ("barcelona Won ",BarcelonaWon)
+print("madrid Won",MadridWon)
+print(count_of_TiesM)
+print(count_of_TiesB)
+print(TotalTies)
+
+labels = ['Barcelona Won','Madrid Won', 'Total Ties']
+values = [BarcelonaWon,MadridWon,TotalTies]  # Absolute values
+plt.pie(values, labels=labels, autopct='%1.1f%%', startangle=140)
+plt.axis('equal')
+plt.show()
+
+
+
+filtered_df = df[(df['home_team'] == "Real Madrid") & (df['away_team'] == "Barcelona")]
+df['local_score'] = df['local_score'].astype(int)
+total_goals = df.groupby('home_team')['local_score'].sum().reset_index()
+
+
+
