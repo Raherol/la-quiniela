@@ -246,3 +246,25 @@ c:\Users\peree\MASTER Moldelitzacio\Curs 2023-24\R&I\Introduction to Python for 
       5     current_streak = 0
 
 NameError: name 'df' is not defined
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Nou q4
+def plot_cross_results_table(season, division):
+    """Makes a cross-table showing the results of the input season and league.
+
+    Args:
+        season (str): season of the results to make the table from. Format: 'aaaa-aaaa'. Example: '2000-2001'.
+
+    Returns:
+        pandas.io.formats.style.Styler: crosstable with the match results.
+    """
+    
+    df = q4[(q4.season == season) & (q4.division == division)]
+    team_names = df.away_team.drop_duplicates().reset_index(drop = True)
+    df = df.replace({'away_team':abreviate_names(team_names)})
+    table = pd.crosstab(df.home_team, df.away_team, rownames=['Home Team'], colnames=['Away Team'], values=df.score, aggfunc='first')
+    table = table.fillna('-')
+    ordered_columns = abreviate_names(table.index).values()
+    table =  table[ordered_columns].style.applymap(style_scores)
+    return table
+plot_cross_results_table('2020-2021',1)
