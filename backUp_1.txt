@@ -1,0 +1,270 @@
+df = df.dropna(subset=['home_team', 'away_team', 'score','goal_diff'])
+q4 = df[['home_team', 'away_team', 'score', 'goal_diff']]
+
+# Create a pivot table using 'home_team' and 'away_team' as index and columns
+pivot_table = pd.pivot_table(q4, values='goal_diff', index='home_team', columns='away_team', fill_value=0, aggfunc = 'score' )
+
+# Create the heatmap
+
+plt.figure(figsize=(10, 10))
+plt.pcolor(pivot_table, cmap='coolwarm', edgecolors='k', linewidths=1)
+plt.xticks(range(len(pivot_table.columns)), pivot_table.columns, rotation=90)
+plt.yticks(range(len(pivot_table.index)), pivot_table.index)
+plt.colorbar(label='Score')
+plt.title('Team Scores Heatmap')
+plt.show()
+
+
+# Assuming you have a pivot table named pivot_table
+# This is just an example; replace it with your actual pivot table
+
+# Convert the pivot table to a crosstab
+crosstab_table = pd.crosstab(index='home_team', columns='away_team', values='score')
+
+#pivot_table = pd.pivot_table(q4, values='goal_diff', index='home_team', columns='away_team', fill_value=0)
+
+
+
+# Display the crosstab
+print(crosstab_table)
+
+
+
+
+q5
+
+
+q5=df
+filtered_df = q5[(q5['home_team'] == "Real Madrid") & (q5['away_team'] == "Barcelona") & ~q5['results'].isna()]
+
+# Display the filtered DataFrame
+#display(filtered_df)
+
+# Filter the DataFrame
+filtered_df = df[(df['home_team'] == "Real Madrid") & (df['away_team'] == "Barcelona") & ~df['results'].isna()]
+
+# Display the filtered DataFrame
+#display(filtered_df)
+
+result_counts_Madrid_home= filtered_df['results'].value_counts()
+count_of_1_Mh = result_counts_Madrid_home.get(1, 0)
+result_counts_Barcelona_away= filtered_df['results'].value_counts()
+count_of_2_Ba = result_counts_Barcelona_away.get(2, 0)
+result_counts_ties= filtered_df['results'].value_counts()
+count_of_TiesM= result_counts_ties.get("X", 0)
+
+
+
+filtered_df = df[(df['away_team'] == "Real Madrid") & (df['home_team'] == "Barcelona") & ~df['results'].isna()]
+result_counts_Barcelona_home= filtered_df['results'].value_counts()
+count_of_1_Bh = result_counts_Barcelona_home.get(1, 0)
+result_counts_Madrid_away= filtered_df['results'].value_counts()
+count_of_2_Ma = result_counts_Madrid_away.get(2, 0)
+result_counts_ties= filtered_df['results'].value_counts()
+count_of_TiesB= result_counts_ties.get("X", 0)
+
+BarcelonaWon=count_of_1_Bh+count_of_2_Ba
+TotalTies=count_of_TiesM+count_of_TiesB
+
+print ("barcelona Won ",BarcelonaWon)
+print("madrid Won",MadridWon)
+print(count_of_TiesM)
+print(count_of_TiesB)
+print(TotalTies)
+
+labels = ['Barcelona Won','Madrid Won', 'Total Ties']
+values = [BarcelonaWon,MadridWon,TotalTies]  # Absolute values
+plt.pie(values, labels=labels, autopct='%1.1f%%', startangle=140)
+plt.axis('equal')
+plt.show()
+
+
+
+filtered_df = df[(df['home_team'] == "Real Madrid") & (df['away_team'] == "Barcelona")]
+df['local_score'] = df['local_score'].astype(int)
+total_goals = df.groupby('home_team')['local_score'].sum().reset_index()
+
+==========================================================================================
+
+import pandas as pd
+import sqlite3
+import matplotlib.pyplot as plt
+import numpy as np
+import warnings
+from datetime import datetime
+from collections import defaultdict
+import json
+warnings.filterwarnings('ignore')
+
+======================================================================================================
+Q4 
+def abreviate_names(team_names):
+    """Abreviates to 3 letters the name of football teams passed in a list.
+
+    Args:
+        team_names (string): string with the name of the teams.
+
+    Returns:
+        list(str): 3 letter abreviations for each team.
+    """
+    abreviations = {}
+    for team in team_names:
+        words = team.split()
+        if words[0] == 'Real':
+            abreviations[team] = 'R' + words[1][0:2].upper()
+        elif len(words[0])<3:
+            abreviations[team] = words[1][0:3].upper()
+        else:
+            abreviations[team] = words[0][0:3].upper()
+    return abreviations
+	
+	
+
+
+def style_scores(score):
+    """Styles values of a dataframe with format 'int:int'. Style format is green if the first integer is greater than the second, red if smaller and yellow if equal. Opacity of each cell is modullated by the difference of the two int.
+
+    Args:
+        score (str): result of a match with format 'int:int'. Example: '1:2'
+
+    Returns:
+        str: style settings for the cell
+    """
+    if score == '-': return 'text-align: center'
+    else:
+        home_goals, away_goals = score.split(":")
+        goal_diff = int(home_goals) - int(away_goals)
+        if goal_diff < 0:
+            return f'background-color:red; opacity: {abs(goal_diff)*20}%; color: white; text-align: center'
+        elif goal_diff > 0:
+            return f'background-color:green; opacity: {abs(goal_diff)*20}%; text-align: center'
+        else:
+            return 'background-color:#FFF380; color: black; text-align: center'	
+	
+	
+def plot_cross_results_table(season):
+    """Makes a cross-table showing the results of the input season and league.
+
+    Args:
+        season (str): season of the results to make the table from. Format: 'aaaa-aaaa'. Example: '2000-2001'.
+
+    Returns:
+        pandas.io.formats.style.Styler: crosstable with the match results.
+    """
+    df = df2[df2.division == 1]
+    df = df[df2.season == season]
+    team_names = df.away_team.drop_duplicates()
+    df = df.replace({'away_team':abreviate_names(team_names)})
+    table = pd.crosstab(df.home_team, df.away_team, rownames=['Home Team'], colnames=['Away Team'], values=df.score, aggfunc='first')
+    table = table.fillna('-')
+    ordered_columns = abreviate_names(table.index).values()
+    table =  table[ordered_columns].style.applymap(style_scores)
+    return table
+plot_cross_results_table('2010-2011')
+	
+	================================erros===============
+	---------------------------------------------------------------------------
+NameError: name 'df2' is not defined
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+in Q1
+
+f[["home_goals", "away_goals"]] = df["score"].str.split(":", expand=True).astype(float)
+df2=df.dropna(subset="score") 
+df2["goal diff"] = (df2["home_goals"]  - df2["away_goals"])
+df2["Who_Wins"] = np.where(df2["goal diff"] > 0, "Home win", np.where(df2["goal diff"] < 0, "Visitor win", "Tie"))
+home_wins_count = df2["Who_Wins"].value_counts()
+ax = home_wins_count.plot(kind = 'pie', autopct = '%1.0f%%')
+ax.set_title("Home wins distribution")
+plt.show()
+
+
+
+	
+	===================================================================================================================================================
+	Q6
+	
+streaks_dic = {}
+team_lst = df["home_team"].unique()
+
+for team in team_lst:
+    current_streak = 0
+    max_streak = 0
+    home_games = df2[df2["home_team"] == team]
+    away_games = df2[df2["away_team"] == team]
+    total_games = pd.concat([home_games, away_games])
+    sorted_games = total_games.sort_values(by = "date")
+    for index, row in sorted_games.iterrows():
+        no_loss = (team == row["home_team"] and row["goal diff"] > -1) or (team == row["away_team"] and row["goal diff"] < 1)
+        if no_loss == True:
+            current_streak += 1
+            if current_streak > max_streak:
+                end_date = row["date"]
+        else:
+            if current_streak > max_streak:
+                max_streak = current_streak
+                true_st_date = st_date
+            current_streak = 0
+        if current_streak == 0:
+            st_date = row["date"]
+    if max_streak == 0:
+        streaks_dic[team] = [max_streak, "NA", "NA"]
+    else:
+        streaks_dic[team] = [max_streak, datetime.strftime(true_st_date, '%d/%m/%Y'), datetime.strftime(end_date, '%d/%m/%Y')]
+
+sorted_streaks = dict(sorted(streaks_dic.items(), key=lambda item: item[1], reverse = True))
+
+
+
+top10_streaks = {}
+top10_teams = []
+top10_goals = []
+top10_dates = []
+for key in sorted_streaks:
+    team_data = sorted_streaks[key]
+    top10_streaks[key] = team_data
+    top10_teams.append(key)
+    top10_goals.append(team_data[0])
+    top10_dates.append(f"{team_data[1]} - {team_data[2]}")
+    if len(top10_streaks) > 9:
+        break
+
+plt.figure()
+plt.barh(top10_teams, top10_goals)
+plt.gca().invert_yaxis()
+plt.ylabel('Teams')
+plt.xlabel('Goals in the streak')
+for x, y, l in zip(top10_goals, top10_teams, top10_dates):
+    plt.text(x, y, l, ha = 'right')
+	
+	========================000errors =============================
+	
+	NameError                                 Traceback (most recent call last)
+c:\Users\peree\MASTER Moldelitzacio\Curs 2023-24\R&I\Introduction to Python for analytical purposes\Final Project\la-quiniela\analysis\LaLigaDataAnalysis.ipynb Cell 35 line 2
+      1 streaks_dic = {}
+----> 2 team_lst = df["home_team"].unique()
+      4 for team in team_lst:
+      5     current_streak = 0
+
+NameError: name 'df' is not defined
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Nou q4
+def plot_cross_results_table(season, division):
+    """Makes a cross-table showing the results of the input season and league.
+
+    Args:
+        season (str): season of the results to make the table from. Format: 'aaaa-aaaa'. Example: '2000-2001'.
+
+    Returns:
+        pandas.io.formats.style.Styler: crosstable with the match results.
+    """
+    
+    df = q4[(q4.season == season) & (q4.division == division)]
+    team_names = df.away_team.drop_duplicates().reset_index(drop = True)
+    df = df.replace({'away_team':abreviate_names(team_names)})
+    table = pd.crosstab(df.home_team, df.away_team, rownames=['Home Team'], colnames=['Away Team'], values=df.score, aggfunc='first')
+    table = table.fillna('-')
+    ordered_columns = abreviate_names(table.index).values()
+    table =  table[ordered_columns].style.applymap(style_scores)
+    return table
+plot_cross_results_table('2020-2021',1)
