@@ -10,24 +10,7 @@ from quiniela import models, io
 def parse_seasons(value):
     if value == "all":
         return "all"
-    seasons = []
-    for chunk in value.split(","):
-        if ":" in chunk:
-            try:
-                start, end = map(int, chunk.split(":"))
-                assert start < end
-            except Exception:
-                raise argparse.ArgumentTypeError(f"Unexpected format for seasons {value}")
-            for i in range(start, end):
-                seasons.append(f"{i}-{i+1}")
-        else:
-            try:
-                start, end = map(int, chunk.split("-"))
-                assert start == end - 1
-            except Exception:
-                raise argparse.ArgumentTypeError(f"Unexpected format for seasons {value}")
-            seasons.append(chunk)
-    return seasons
+    return value
 
 
 parser = argparse.ArgumentParser()
@@ -70,25 +53,23 @@ predict_parser.add_argument(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    logging.basicConfig(
-        filename=settings.LOGS_PATH / f"{args.task}_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.log",
-        format="%(asctime)s - [%(levelname)s] - %(message)s",
-        level=logging.INFO,
-    )
     if args.task == "train":
-        logging.info(f"Training LaQuiniela model with seasons {args.training_seasons}")
         model = models.QuinielaModel()
         training_data = io.load_historical_data(args.training_seasons)
         model.train(training_data)
         model.save(settings.MODELS_PATH / args.model_name)
-        print(f"Model succesfully trained and saved in {settings.MODELS_PATH / args.model_name}")
+        print(
+            f"Model succesfully trained and saved in {settings.MODELS_PATH / args.model_name}")
     if args.task == "predict":
-        logging.info(f"Predicting matchday {args.matchday} in season {args.season}, division {args.division}")
-        model = models.QuinielaModel.load(settings.MODELS_PATH / args.model_name)
-        predict_data = io.load_matchday(args.season, args.division, args.matchday)
+        model = models.QuinielaModel.load(
+            settings.MODELS_PATH / args.model_name)
+        predict_data = io.load_matchday(
+            args.season, args.division, args.matchday)
         predict_data["pred"] = model.predict(predict_data)
-        print(f"Matchday {args.matchday} - LaLiga - Division {args.division} - Season {args.season}")
+        print(
+            f"Matchday {args.matchday} - LaLiga - Division {args.division} - Season {args.season}")
         print("=" * 70)
         for _, row in predict_data.iterrows():
-            print(f"{row['home_team']:^30s} vs {row['away_team']:^30s} --> {row['pred']}")
+            print(
+                f"{row['home_team']:^30s} vs {row['away_team']:^30s} --> {row['pred']}")
         io.save_predictions(predict_data)
